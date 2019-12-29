@@ -46,11 +46,17 @@ function init() {
                 console.log(reader.result);
 
                 // TODO: parse reader.result data and call initVis with the parsed data!
-                initVis(null);
+                console.log();
+				
+				var data = d3.csvParse(reader.result);
+				console.log(data);				
+                initVis(data);
             };
             reader.readAsBinaryString(fileInput.files[0]);
         };
     fileInput.addEventListener('change', readFile);
+    
+    console.log(fileInput);
 }
 
 function initVis(_data){
