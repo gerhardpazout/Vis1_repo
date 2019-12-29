@@ -1,1 +1,6 @@
 .DS_Store
+.suo
+.ipch
+bin/
+.vs/
+Task1/framework_students/tmp
