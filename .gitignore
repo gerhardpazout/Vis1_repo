@@ -5,3 +5,8 @@ bin/
 .vs/
 Task1/framework_students/tmp
 Task1/framework_students/bin/
+*.suo
+*.ipch
+bin/*
+Task1/framework_students/bin/*
+Task1/framework_students/tmp/*
