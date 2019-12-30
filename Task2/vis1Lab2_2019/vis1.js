@@ -47,37 +47,45 @@ function init() {
 
                 // TODO: parse reader.result data and call initVis with the parsed data!
                 console.log();
-				
-				var data = d3.csvParse(reader.result);
-				console.log(data);				
+
+                var data = d3.csvParse(reader.result);
+                console.log(data);
                 initVis(data);
             };
             reader.readAsBinaryString(fileInput.files[0]);
         };
     fileInput.addEventListener('change', readFile);
-    
+
     console.log(fileInput);
 }
 
-function initVis(_data){
+function initVis(_data) {
 
-    // TODO: parse dimensions (i.e., attributes) from input file
+    console.log();
+
+    dimensions = _data.columns;
+    dimensionsWithoutFirst = [...dimensions]; //create copy for safe array manipulation
+    //remove first attribute since its not used in charts and also would result in empty chart if it was used
+    dimensionsWithoutFirst = dimensionsWithoutFirst.splice(1,dimensions.length);
 
     // x scaling for parallel coordinates
     var xPC = d3.scalePoint()
-        .domain(dimensions)
+        .domain(dimensionsWithoutFirst)
         .range([margin.left, widthPC - margin.left - margin.right]);
 
     // y scalings
-    // TODO: set y domain for each dimension
     var y = d3.scaleLinear()
         .range([height - margin.bottom - margin.top, margin.top]);
+
+    // used another var y2 instead for testing purposes,
+    // generateYAxes(_data) will eventually be used for var y, and var y will be used in code
+    var y2 = generateYAxes(_data);
 
     // TODO: render parallel coordinates polylines
 
     // parallel coordinates axes container
     var gPC = svgPC.selectAll(".dimension")
-        .data(dimensions)
+        .data(dimensionsWithoutFirst)
         .enter().append("g")
         .attr("class", "dimension")
         .attr("transform", function (d) {
@@ -87,11 +95,15 @@ function initVis(_data){
     // parallel coordinates axes
     gPC.append("g")
         .attr("class", "axis")
-        .call(d3.axisLeft(y)) // TODO: call axis scale for current dimension*
+        .each(function (attribute, idx) {
+            d3.select(this).call(d3.axisLeft(y2[idx])); // not working because y2 is a array not an object
+        })
         .append("text")
         .style("text-anchor", "middle")
         .attr("y", margin.top / 2)
-        .text("domain name"); // TODO: get domain name from data
+        .text(function (attribute) {
+            return attribute;
+        });
 
     // *HINT: to make a call for each bound data item, use .each!
     // example: http://bl.ocks.org/milroc/4254604
@@ -123,27 +135,27 @@ function initVis(_data){
         .text("y");
 
     // init menu for the four visual channels
-    channels.forEach(function(c){
+    channels.forEach(function (c) {
         initMenu(c, dimensions);
     });
 
     // refresh all four select menus
-    channels.forEach(function(c){
-       refreshMenu(c);
+    channels.forEach(function (c) {
+        refreshMenu(c);
     });
 
     renderSP();
 }
 
 // clear visualizations before loading a new file
-function clear(){
+function clear() {
     svgPC.selectAll("*").remove();
     svgSP.selectAll("*").remove();
 }
 
 
 // render scatterplot
-function renderSP(){
+function renderSP() {
 
     // TODO: get domain names from menu and label x- and y-axis
 
@@ -153,26 +165,54 @@ function renderSP(){
 }
 
 // init scatterplot select menu
-function initMenu(id, entries){
-    $( "select#" + id ).empty();
+function initMenu(id, entries) {
+    $("select#" + id).empty();
 
-    entries.forEach(function(d) {
-        $( "select#" + id ).append("<option>"+d+"</option>");
+    entries.forEach(function (d) {
+        $("select#" + id).append("<option>" + d + "</option>");
     });
 
-    $( "#"+id ).selectmenu({
-        select: function() {
+    $("#" + id).selectmenu({
+        select: function () {
             renderSP();
         }
     });
 }
 
 // refresh menu after reloading data
-function refreshMenu(id){
-    $( "#"+id ).selectmenu("refresh");
+function refreshMenu(id) {
+    $("#" + id).selectmenu("refresh");
 }
 
 // read current scatterplot parameters
-function readMenu(id){
-    return $( "#" + id ).val();
+function readMenu(id) {
+    return $("#" + id).val();
+}
+
+/*
+ * HELPER FUNCTIONS
+ */
+
+// generates array with [min, max] values for y-axis
+function generateYAxes(data) {
+    var y = new Array();
+    dim = [...dimensionsWithoutFirst]; //copy array
+    //dim.shift(); // remove column 'name' (String) as it is not supposed to be rendered
+
+    dim.forEach(function (el) {
+        var attribute = "" + el;
+        console.log(attribute + ": " + d3.extent(data, function (d) {
+            return +d[attribute];
+        }));
+        y.push(
+            d3.scaleLinear()
+                //.domain([getMinFromAttribute(data, attribute), getMaxFromAttribute(data, attribute)])
+                .domain(d3.extent(data, function (d) {
+                    return +d[attribute];
+                })) // '+' required for integer conversion
+                .range([height - margin.bottom - margin.top, margin.top])
+        );
+    });
+
+    return y;
 }
