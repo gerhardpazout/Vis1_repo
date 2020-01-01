@@ -114,6 +114,25 @@ function initVis(_data) {
     // *HINT: to make a call for each bound data item, use .each!
     // example: http://bl.ocks.org/milroc/4254604
 
+    // draw lines into PC graph
+
+    // function to get coordinates for each path
+    // for each row (= 'db entry'): return x and y coordinates of the line that needs to be drawn.
+    function drawPathsInPC(d) {
+        return d3.line()(dimensionsWithoutFirst.map(function(p) { return [xPC(p), yPC[p](d[p])]; }));
+    }
+
+    //applying the function
+    svgPC
+        .selectAll(".path")
+        .data(_data)
+        .enter().append("path")
+        .attr("d",  drawPathsInPC)
+        .attr("class", "path"); //add class
+
+
+    // SCATTER PLOT
+
     // x scalings for scatter plot
     // TODO: set x domain for each dimension
     var xSP = d3.scaleLinear()
