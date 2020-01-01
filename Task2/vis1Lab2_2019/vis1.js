@@ -45,7 +45,6 @@ function init() {
                 console.log("data loaded: ");
                 console.log(reader.result);
 
-                // TODO: parse reader.result data and call initVis with the parsed data!
                 console.log();
 
                 var data = d3.csvParse(reader.result);
@@ -86,8 +85,6 @@ function initVis(_data) {
             .domain( d3.extent(_data, function(d) { return +d[attribute]; }) )
             .range([height - margin.bottom - margin.top, margin.top])
     }
-
-    // TODO: render parallel coordinates polylines
 
     // parallel coordinates axes container
     var gPC = svgPC.selectAll(".dimension")
