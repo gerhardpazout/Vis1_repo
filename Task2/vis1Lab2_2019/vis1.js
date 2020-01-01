@@ -96,7 +96,7 @@ function initVis(_data) {
     gPC.append("g")
         .attr("class", "axis")
         .each(function (attribute, idx) {
-            d3.select(this).call(d3.axisLeft(y2[idx])); // not working because y2 is a array not an object
+            d3.select(this).call(d3.axisLeft(y2[idx])); // not working withd y2[attribute] because y2 is a array not an object
         })
         .append("text")
         .style("text-anchor", "middle")
