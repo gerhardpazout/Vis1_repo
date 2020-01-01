@@ -28,3 +28,15 @@ svg {
 fieldset {
     border-width: 0;
 }
+
+.path {
+    fill: none;
+    stroke: #808080;
+    opacity: 0.5;
+}
+
+.path:hover {
+    stroke: blue;
+    opacity: 1;
+    stroke-width: 3px;
+}
