@@ -66,7 +66,7 @@ function initVis(_data) {
     dimensions = _data.columns;
     dimensionsWithoutFirst = [...dimensions]; //create copy for safe array manipulation
     //remove first attribute since its not used in charts and also would result in empty chart if it was used
-    dimensionsWithoutFirst = dimensionsWithoutFirst.splice(1,dimensions.length);
+    dimensionsWithoutFirst  = d3.keys(_data[0]).filter(function(attribute, idx) { return idx != 0 })
 
     // x scaling for parallel coordinates
     var xPC = d3.scalePoint()
@@ -79,7 +79,13 @@ function initVis(_data) {
 
     // used another var y2 instead for testing purposes,
     // generateYAxes(_data) will eventually be used for var y, and var y will be used in code
-    var y2 = generateYAxes(_data);
+    var yPC = {}
+    for (i in dimensions) {
+        var attribute = dimensions[i]
+        yPC[attribute] = d3.scaleLinear()
+            .domain( d3.extent(_data, function(d) { return +d[attribute]; }) )
+            .range([height - margin.bottom - margin.top, margin.top])
+    }
 
     // TODO: render parallel coordinates polylines
 
@@ -96,7 +102,7 @@ function initVis(_data) {
     gPC.append("g")
         .attr("class", "axis")
         .each(function (attribute, idx) {
-            d3.select(this).call(d3.axisLeft(y2[idx])); // not working withd y2[attribute] because y2 is a array not an object
+            d3.select(this).call(d3.axisLeft(yPC[attribute])); // not working withd y2[attribute] because y2 is a array not an object
         })
         .append("text")
         .style("text-anchor", "middle")
@@ -187,32 +193,4 @@ function refreshMenu(id) {
 // read current scatterplot parameters
 function readMenu(id) {
     return $("#" + id).val();
-}
-
-/*
- * HELPER FUNCTIONS
- */
-
-// generates array with [min, max] values for y-axis
-function generateYAxes(data) {
-    var y = new Array();
-    dim = [...dimensionsWithoutFirst]; //copy array
-    //dim.shift(); // remove column 'name' (String) as it is not supposed to be rendered
-
-    dim.forEach(function (el) {
-        var attribute = "" + el;
-        console.log(attribute + ": " + d3.extent(data, function (d) {
-            return +d[attribute];
-        }));
-        y.push(
-            d3.scaleLinear()
-                //.domain([getMinFromAttribute(data, attribute), getMaxFromAttribute(data, attribute)])
-                .domain(d3.extent(data, function (d) {
-                    return +d[attribute];
-                })) // '+' required for integer conversion
-                .range([height - margin.bottom - margin.top, margin.top])
-        );
-    });
-
-    return y;
 }
