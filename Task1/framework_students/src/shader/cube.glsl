@@ -14,6 +14,10 @@ out vec3 texCoordVar;
 void main()
 {
 	// ToDo
+	texCoordVar = texCoord;
+
+	vec4 pos = projMatrix * mvMatrix * vec4(vertex, 1.0f);
+	gl_Position = pos;
 }
 
 -- Fragment
@@ -24,5 +28,5 @@ out vec4 fragColor;
 
 void main()
 {
-   // ToDo
+   fragColor = vec4(texCoordVar, 1.0f);
 }

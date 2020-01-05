@@ -9,6 +9,8 @@ out vec2 texCoord;
 void main()
 {
 	// ToDo
+	texCoord = 0.5 * (vertex.xy + vec2(1.0f, 1.0f));
+	gl_Position = vec4(vertex, 1.0f);
 }
 
 -- Fragment
@@ -25,30 +27,30 @@ out vec4 fragColor;
 void main()
 {
 	// ToDo
-	
-	
+
+
 	switch(renderingMode)
 	{
 		case 0: //render front faces
 		{
-			
-			
+			vec3 col = texture2D(frontFaces, texCoord).rgb;
+			fragColor = vec4(col,1.0f);
 			break;
 		}
-		
+
 		case 1: //render back faces
 		{
-			
-			
-			
+
+
+
 			break;
 		}
-		
+
 		case 2: //render volume (MIP)
 		{
-			
-			
-			
+
+
+
 			break;
 		}
 		case 3: //render volume (Alpha-Compositing)

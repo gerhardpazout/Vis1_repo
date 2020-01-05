@@ -155,15 +155,60 @@ void GLWidget::paintGL()
 
 	// 1. render front faces to FBO
 
+	GLuint frontface_tex;
+
+	glGenTextures(1, &frontface_tex);
+	glBindTexture(GL_TEXTURE_2D, frontface_tex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width(), height(), 0, GL_RGBA8, GL_UNSIGNED_BYTE, 0);
+
 	// ToDo
+	m_FBO_frontFaces->bind();
+	glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, frontface_tex, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+	glCullFace(GL_FRONT);	
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	m_FBO_frontFaces->release();
 
 	// 2. render back faces to FBO
 	
 	// ToDo
 
+	GLuint backface_tex;
+
+	glGenTextures(1, &backface_tex);
+	glBindTexture(GL_TEXTURE_2D, backface_tex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width(), height(), 0, GL_RGBA8, GL_UNSIGNED_BYTE, 0);
+
+
+	m_FBO_backFaces->bind();
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, backface_tex, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_BACK);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	m_FBO_backFaces->release();
 	// 3. render the volume
+
+		// ToDo
 	
-	// ToDo
+	QOpenGLVertexArrayObject::Binder vaoBinder2(&m_vaoQuad);
+	m_programVolume->bind();
+
+	m_programVolume->setUniformValue(m_programVolume->uniformLocation("renderingMode"), 0);
+	//0: front faces, 1: back faces, 2: MIP, 3: alpha
+
+	m_programVolume->setUniformValue(m_programVolume->uniformLocation("frontFaces"), frontface_tex);
+	m_programVolume->setUniformValue(m_programVolume->uniformLocation("backFaces"), backface_tex);
+
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	
+	
 }
 
 void GLWidget::initializeGL()
