@@ -1,13 +1,13 @@
 .DS_Store
 .suo
 .ipch
-bin/
+#bin/
 .vs/
 Task1/framework_students/tmp
-Task1/framework_students/bin/
+#Task1/framework_students/bin/
 *.suo
 *.ipch
-bin/*
+#bin/*
 Task1/framework_students/bin/*
 Task1/framework_students/tmp/*
 
