@@ -14,15 +14,20 @@ out vec3 texCoordVar;
 void main()
 {
 	// ToDo
+	texCoordVar = texCoord;
+
+	vec4 pos = projMatrix * mvMatrix * vec4(vertex, 1.0f);
+	gl_Position = pos;
 }
 
 -- Fragment
 
 in vec3 texCoordVar;
 
+//layout(location = 0)out vec4 fragColor;
 out vec4 fragColor;
 
 void main()
 {
-   // ToDo
+   fragColor = vec4(texCoordVar, 1.0f);
 }
