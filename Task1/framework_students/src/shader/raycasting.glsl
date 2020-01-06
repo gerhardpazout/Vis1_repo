@@ -34,7 +34,8 @@ void main()
 		case 0: //render front faces
 		{
 			vec3 col = texture2D(frontFaces, texCoord).rgb;
-			fragColor = vec4(col,1.0f);
+			fragColor = vec4(col, 1.0f);
+			//fragColor = vec4(0.0f,0.0f,1.0f,1.0f);
 			break;
 		}
 

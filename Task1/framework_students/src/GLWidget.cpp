@@ -106,7 +106,7 @@ GLWidget::GLWidget(QWidget *parent, MainWindow *mainWindow)
 	format.setProfile(QSurfaceFormat::CoreProfile);
 	format.setOption(QSurfaceFormat::DebugContext);
 
-	setFormat(format);
+	setFormat(format); 
 	
 	// we use a file watcher to recompile shaders on the fly
 	// you can change shaders and directly see the result while the program is running
@@ -147,7 +147,8 @@ void GLWidget::paintGL()
 	QMatrix4x4 modelView = QMatrix4x4(glm::value_ptr(m_camera.getViewMatrix())).transposed();
 	QMatrix4x4 projection = QMatrix4x4(glm::value_ptr(m_camera.getProjectionMatrix())).transposed();
 
-	QOpenGLVertexArrayObject::Binder vaoBinder(&m_vaoCube);
+	//QOpenGLVertexArrayObject::Binder vaoBinder(&m_vaoCube);
+	m_vaoCube.bind();
 	m_programCube->bind();
 
 	m_programCube->setUniformValue(m_programCube->uniformLocation("mvMatrix"), modelView);
@@ -155,56 +156,66 @@ void GLWidget::paintGL()
 
 	// 1. render front faces to FBO
 
-	GLuint frontface_tex;
+	m_FBO_frontFaces->bind();
+	
 
-	glGenTextures(1, &frontface_tex);
-	glBindTexture(GL_TEXTURE_2D, frontface_tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width(), height(), 0, GL_RGBA8, GL_UNSIGNED_BYTE, 0);
+	GLuint frontTex;
+	glGenTextures(1, &frontTex);
+	glBindTexture(GL_TEXTURE_2D, frontTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width(), height(), 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+
+	
+	
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frontTex, 0);
+
+	//glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
 	// ToDo
-	m_FBO_frontFaces->bind();
-	glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, frontface_tex, 0);
+	glViewport(0, 0, width(), height());
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 	glCullFace(GL_FRONT);	
+
 	glDrawArrays(GL_TRIANGLES, 0, 3);
+	
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		std::cout << "ERROR" << std::endl;
+	}
 
 	m_FBO_frontFaces->release();
+	m_vaoCube.release();
 
 	// 2. render back faces to FBO
 	
 	// ToDo
 
-	GLuint backface_tex;
-
-	glGenTextures(1, &backface_tex);
-	glBindTexture(GL_TEXTURE_2D, backface_tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width(), height(), 0, GL_RGBA8, GL_UNSIGNED_BYTE, 0);
-
-
-	m_FBO_backFaces->bind();
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, backface_tex, 0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glCullFace(GL_BACK);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-
-	m_FBO_backFaces->release();
 	// 3. render the volume
 
 		// ToDo
 	
-	QOpenGLVertexArrayObject::Binder vaoBinder2(&m_vaoQuad);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+	m_vaoQuad.bind();
 	m_programVolume->bind();
 
+	glDisable(GL_DEPTH_TEST);
+	glBindTexture(GL_TEXTURE_2D, frontTex);
+	
+	//frontTex->bind();
+	glDisable(GL_CULL_FACE);
 	m_programVolume->setUniformValue(m_programVolume->uniformLocation("renderingMode"), 0);
 	//0: front faces, 1: back faces, 2: MIP, 3: alpha
 
-	m_programVolume->setUniformValue(m_programVolume->uniformLocation("frontFaces"), frontface_tex);
-	m_programVolume->setUniformValue(m_programVolume->uniformLocation("backFaces"), backface_tex);
+	//m_programVolume->setUniformValue(m_programVolume->uniformLocation("frontFaces"), frontface_tex);
+	//m_programVolume->setUniformValue(m_programVolume->uniformLocation("backFaces"), backface_tex);
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 	
