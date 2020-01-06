@@ -106,7 +106,7 @@ GLWidget::GLWidget(QWidget *parent, MainWindow *mainWindow)
 	format.setProfile(QSurfaceFormat::CoreProfile);
 	format.setOption(QSurfaceFormat::DebugContext);
 
-	setFormat(format);
+	setFormat(format); 
 	
 	// we use a file watcher to recompile shaders on the fly
 	// you can change shaders and directly see the result while the program is running
@@ -147,7 +147,8 @@ void GLWidget::paintGL()
 	QMatrix4x4 modelView = QMatrix4x4(glm::value_ptr(m_camera.getViewMatrix())).transposed();
 	QMatrix4x4 projection = QMatrix4x4(glm::value_ptr(m_camera.getProjectionMatrix())).transposed();
 
-	QOpenGLVertexArrayObject::Binder vaoBinder(&m_vaoCube);
+	//QOpenGLVertexArrayObject::Binder vaoBinder(&m_vaoCube);
+	m_vaoCube.bind();
 	m_programCube->bind();
 
 	m_programCube->setUniformValue(m_programCube->uniformLocation("mvMatrix"), modelView);
@@ -155,15 +156,113 @@ void GLWidget::paintGL()
 
 	// 1. render front faces to FBO
 
+	m_FBO_frontFaces->bind();
+	
+
+	GLuint frontTex;
+	glGenTextures(1, &frontTex);
+	glBindTexture(GL_TEXTURE_2D, frontTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width(), height(), 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+
+	
+	
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frontTex, 0);
+
+	//glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+
 	// ToDo
+	glViewport(0, 0, width(), height());
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+	glCullFace(GL_BACK);	
+
+	glDrawElements(GL_TRIANGLES, sizeof(cube_elements)/sizeof(GLushort), GL_UNSIGNED_SHORT, nullptr);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		std::cout << "ERROR" << std::endl;
+	}
+
+	m_FBO_frontFaces->release();
+	
 
 	// 2. render back faces to FBO
 	
 	// ToDo
 
-	// 3. render the volume
-	
+	m_FBO_backFaces->bind();
+
+
+	GLuint backTex;
+	glGenTextures(1, &backTex);
+	glBindTexture(GL_TEXTURE_2D, backTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width(), height(), 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+
+
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, backTex, 0);
+
+	//glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+
 	// ToDo
+	glViewport(0, 0, width(), height());
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_FRONT);
+
+
+	glDrawElements(GL_TRIANGLES, sizeof(cube_elements) / sizeof(GLushort), GL_UNSIGNED_SHORT, nullptr);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		std::cout << "ERROR" << std::endl;
+	}
+
+	m_FBO_backFaces->release();
+
+	m_vaoCube.release();
+
+	// 3. render the volume
+
+		// ToDo
+	
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+	m_vaoQuad.bind();
+	m_programVolume->bind();
+
+	m_programVolume->setUniformValue(m_programVolume->uniformLocation("frontFaces"), 0);
+	m_programVolume->setUniformValue(m_programVolume->uniformLocation("backFaces"), 1);
+	m_programVolume->setUniformValue(m_programVolume->uniformLocation("volume"), 2);
+
+	glDisable(GL_DEPTH_TEST);
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, frontTex);
+	glActiveTexture(GL_TEXTURE0 + 1);
+	glBindTexture(GL_TEXTURE_2D, backTex);
+	glActiveTexture(GL_TEXTURE0 + 2);
+	m_VolumeTexture->bind();
+	//frontTex->bind();
+	glDisable(GL_CULL_FACE);
+	m_programVolume->setUniformValue(m_programVolume->uniformLocation("renderingMode"), m_renderingMode);
+	//0: front faces, 1: back faces, 2: MIP, 3: alpha
+
+	//m_programVolume->setUniformValue(m_programVolume->uniformLocation("frontFaces"), frontface_tex);
+	//m_programVolume->setUniformValue(m_programVolume->uniformLocation("backFaces"), backface_tex);
+
+	glDrawElements(GL_TRIANGLES, sizeof(quad_elements) / sizeof(GLushort), GL_UNSIGNED_SHORT, nullptr);
+
+	m_vaoQuad.release();
+	m_programVolume->release();
 }
 
 void GLWidget::initializeGL()

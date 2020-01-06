@@ -1,14 +1,14 @@
 .DS_Store
 .suo
 .ipch
-bin/
+#bin/
 .vs/
 Task1/framework_students/tmp
-Task1/framework_students/bin/
+#Task1/framework_students/bin/
 *.suo
 *.ipch
-bin/*
-Task1/framework_students/bin/*
+#bin/*
+#Task1/framework_students/bin/*
 Task1/framework_students/tmp/*
 
 Task2/vis1Lab2_2019/.idea/workspace.xml
