@@ -253,7 +253,7 @@ void GLWidget::paintGL()
 	m_VolumeTexture->bind();
 	//frontTex->bind();
 	glDisable(GL_CULL_FACE);
-	m_programVolume->setUniformValue(m_programVolume->uniformLocation("renderingMode"), 2);
+	m_programVolume->setUniformValue(m_programVolume->uniformLocation("renderingMode"), m_renderingMode);
 	//0: front faces, 1: back faces, 2: MIP, 3: alpha
 
 	//m_programVolume->setUniformValue(m_programVolume->uniformLocation("frontFaces"), frontface_tex);
