@@ -9,6 +9,7 @@ out vec2 texCoord;
 void main()
 {
 	// ToDo
+	//texCoord = vertex.xy;
 	texCoord = 0.5 * (vertex.xy + vec2(1.0f, 1.0f));
 	gl_Position = vec4(vertex, 1.0f);
 }
@@ -33,15 +34,17 @@ void main()
 	{
 		case 0: //render front faces
 		{
-			vec3 col = texture2D(frontFaces, texCoord).rgb;
-			fragColor = vec4(col, 1.0f);
-			//fragColor = vec4(0.0f,0.0f,1.0f,1.0f);
+			vec3 col1 = texture2D(frontFaces, texCoord).rgb;
+			fragColor = vec4(col1, 1.0f);
 			break;
 		}
 
 		case 1: //render back faces
 		{
 
+		vec3 col2 = texture2D(backFaces, texCoord).rgb;
+		fragColor = vec4(col2, 1.0f);
+		break;
 
 
 			break;
@@ -49,8 +52,25 @@ void main()
 
 		case 2: //render volume (MIP)
 		{
+			vec3 startPos = texture2D(frontFaces, texCoord).rgb;
+			vec3 endPos = texture2D(backFaces, texCoord).rgb;
+			vec3 ray = endPos - startPos;
+			float rayLength = length(ray);
+			vec3 step = 0.1f * normalize(ray);
 
+			float maxIntensity = 0;
+			vec3 curSamplePos = startPos;
+			for(int i = 0; i < 100; i++){
+				float cur = texture3D(volume, endPos-curSamplePos).x;
+				if(cur > maxIntensity){
+				maxIntensity = cur;
+				}
+				curSamplePos += step;
+			}
 
+			//fragColor = vec4(startPos, 1.0f);
+			//fragColor = vec4(endPos, 1.0f);
+			fragColor = vec4(maxIntensity, 0.0f, 0.0f, 1.0f);
 
 			break;
 		}
